@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://bmwfaef8yh0s4"]
+
+[ext_resource type="Script" uid="uid://dd0a4jmintay0" path="res://wayfinders/base/world/biomes/BiomeData.gd" id="1_6315o"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aj36g"]
+albedo_color = Color(0, 0.3254902, 0.70980394, 1)
+
+[resource]
+script = ExtResource("1_6315o")
+spawn_weight = 3.0
+height_scale = 0.5
+max_continent_value = -0.15
+terrain_material = SubResource("StandardMaterial3D_aj36g")
+metadata/_custom_type_script = "uid://dd0a4jmintay0"

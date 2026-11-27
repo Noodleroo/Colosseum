@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://cpphepy4xukmi"]
+
+[ext_resource type="Script" uid="uid://dd0a4jmintay0" path="res://wayfinders/base/world/biomes/BiomeData.gd" id="1_aj36g"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ecnya"]
+albedo_color = Color(0.40832946, 0.40832946, 0.40832946, 1)
+
+[resource]
+script = ExtResource("1_aj36g")
+biome_name = "Mountain"
+spawn_weight = 10.0
+height_scale = 35.0
+min_continent_value = 0.2
+terrain_material = SubResource("StandardMaterial3D_ecnya")
+metadata/_custom_type_script = "uid://dd0a4jmintay0"

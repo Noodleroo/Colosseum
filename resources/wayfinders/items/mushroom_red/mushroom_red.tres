@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Item" format=3 uid="uid://cuogvx5ofvaq5"]
+
+[ext_resource type="Texture2D" uid="uid://b7ixdbiunaakp" path="res://resources/wayfinders/items/textures/mushroom_red.png" id="1_faclp"]
+[ext_resource type="ArrayMesh" uid="uid://dla1ft6mqlp1n" path="res://resources/wayfinders/items/mushroom_red/mushroom_red.glb" id="2_q71tc"]
+[ext_resource type="Script" uid="uid://b34swx3nxsb6p" path="res://wayfinders/base/item/items/Item.gd" id="3_s143v"]
+
+[resource]
+script = ExtResource("3_s143v")
+id = "mushroom_red"
+name_key = "KEY_MUSHROOM_RED"
+description_key = "KEY_MUSHROOM_RED_DESC"
+icon_path = "res://resources/wayfinders/items/textures/mushroom_red.png"
+icon = ExtResource("1_faclp")
+item_scene = ExtResource("2_q71tc")
+metadata/_custom_type_script = "uid://b34swx3nxsb6p"

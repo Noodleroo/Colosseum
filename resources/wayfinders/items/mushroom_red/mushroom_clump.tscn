@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://c78nbg6kph1lw"]
+
+[ext_resource type="ArrayMesh" uid="uid://bo6btpbd3sypp" path="res://resources/wayfinders/items/mushroom_red/mushroom_red_clump.glb" id="1_8q0nk"]
+[ext_resource type="Script" uid="uid://dyy7hjclimiy3" path="res://wayfinders/base/data/item/ItemPickup.gd" id="2_8q0nk"]
+[ext_resource type="Resource" uid="uid://cuogvx5ofvaq5" path="res://resources/wayfinders/items/mushroom_red/mushroom_red.tres" id="3_mdeac"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fa6ko"]
+radius = 1.038281
+
+[node name="MushroomClump" type="Node3D" unique_id=1421644077]
+
+[node name="Area3D" type="Area3D" parent="." unique_id=430616247]
+script = ExtResource("2_8q0nk")
+item_data = ExtResource("3_mdeac")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Area3D" unique_id=448570872]
+visibility_range_end = 100.0
+visibility_range_end_margin = 10.0
+mesh = ExtResource("1_8q0nk")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1516021104]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.56388396, 0)
+shape = SubResource("SphereShape3D_fa6ko")

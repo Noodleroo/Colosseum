@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BiomeData" format=3 uid="uid://cm1c6f0osyqnp"]
+
+[ext_resource type="Script" uid="uid://dd0a4jmintay0" path="res://wayfinders/base/world/biomes/BiomeData.gd" id="1_1kiux"]
+[ext_resource type="PackedScene" uid="uid://c78nbg6kph1lw" path="res://resources/wayfinders/items/mushroom_red/mushroom_clump.tscn" id="1_ecnya"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oaosd"]
+albedo_color = Color(0.00034033254, 0.4583512, 8.663535e-07, 1)
+emission = Color(0.8862745, 0, 0, 1)
+emission_energy_multiplier = 0.17
+
+[resource]
+script = ExtResource("1_1kiux")
+spawn_weight = 0.2
+height_scale = 1.0
+min_continent_value = -0.15
+max_continent_value = 0.25
+terrain_material = SubResource("StandardMaterial3D_oaosd")
+spawnable_scenes = Array[PackedScene]([ExtResource("1_ecnya")])
+spawn_density = 0.01
+metadata/_custom_type_script = "uid://dd0a4jmintay0"

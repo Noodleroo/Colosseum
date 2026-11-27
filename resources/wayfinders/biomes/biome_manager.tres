@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BiomeManager" format=3 uid="uid://cm52xrvur6hqp"]
+
+[ext_resource type="Script" uid="uid://dd0a4jmintay0" path="res://wayfinders/base/world/biomes/BiomeData.gd" id="1_ysrfv"]
+[ext_resource type="Script" uid="uid://d2t53oekxrb8x" path="res://wayfinders/base/world/biomes/BiomeManager.gd" id="2_7wnn4"]
+[ext_resource type="Resource" uid="uid://cm1c6f0osyqnp" path="res://resources/wayfinders/biomes/plains.tres" id="2_pjlas"]
+[ext_resource type="Resource" uid="uid://bmwfaef8yh0s4" path="res://resources/wayfinders/biomes/ocean.tres" id="3_y16jl"]
+[ext_resource type="Resource" uid="uid://cpphepy4xukmi" path="res://resources/wayfinders/biomes/mountain.tres" id="4_o8sl2"]
+
+[resource]
+script = ExtResource("2_7wnn4")
+biomes = Array[ExtResource("1_ysrfv")]([ExtResource("2_pjlas"), ExtResource("3_y16jl"), ExtResource("4_o8sl2")])
+metadata/_custom_type_script = "uid://d2t53oekxrb8x"
