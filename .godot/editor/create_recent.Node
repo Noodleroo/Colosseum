@@ -1,0 +1,14 @@
+CollisionShape3D
+Area3D
+MeshInstance3D
+CharacterBody3D
+Panel
+Control
+Label
+VBoxContainer
+VSeparator
+HBoxContainer
+ProgressBar
+CanvasLayer
+TextureRect
+Node3D

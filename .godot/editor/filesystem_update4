@@ -1,0 +1,10 @@
+res://player/player.tscn
+res://colosseum.tscn
+res://hud.tscn
+res://HUD.gd
+res://player/Player.gd
+res://Switch.gd
+res://entities/EnemyData.gd
+res://entities/enemies/gladiator.tres
+res://entities/Enemy.gd
+res://entities/ArenaBosses.gd

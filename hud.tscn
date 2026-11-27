@@ -1,0 +1,343 @@
+[gd_scene format=3 uid="uid://d04ivry55ux8s"]
+
+[ext_resource type="Script" uid="uid://bxx3ouy7pvh27" path="res://HUD.gd" id="1_37p78"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fa6ko"]
+bg_color = Color(0.32544088, 0.3254409, 0.32544076, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0dn5q"]
+bg_color = Color(0.8784314, 0.8784314, 0, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.8, 0.8, 0, 0)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2cr7j"]
+bg_color = Color(0.47843137, 0.039215688, 0.09411765, 1)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(1, 0.8, 0, 1)
+corner_radius_top_left = 999
+corner_radius_bottom_left = 999
+corner_detail = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_su2ui"]
+bg_color = Color(0.47843137, 0.039215688, 0.09411765, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.6, 0.6, 0.6, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xt3y6"]
+bg_color = Color(1, 0.8, 0, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.8, 0.8, 0.8, 0)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n2snw"]
+bg_color = Color(0.18039216, 0.18039216, 0.18039216, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.6, 0.6, 0.6, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_37p78"]
+bg_color = Color(0.47843137, 0.039215688, 0.09411765, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.8, 0.8, 0.8, 0)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_fa6ko"]
+thickness = 3
+vertical = true
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k8rmw"]
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(1, 0.8, 0, 1)
+corner_radius_top_left = 999
+corner_radius_top_right = 999
+corner_radius_bottom_right = 999
+corner_radius_bottom_left = 999
+
+[node name="HUD" type="CanvasLayer" unique_id=1836076017]
+script = ExtResource("1_37p78")
+
+[node name="HUDRoot" type="Control" parent="." unique_id=1566902329]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="RoundProgress" type="HBoxContainer" parent="HUDRoot" unique_id=62511692]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="ProgressBar" type="ProgressBar" parent="HUDRoot/RoundProgress" unique_id=822028322]
+custom_minimum_size = Vector2(420, 36)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_fa6ko")
+theme_override_styles/fill = SubResource("StyleBoxFlat_0dn5q")
+exp_edit = true
+rounded = true
+show_percentage = false
+
+[node name="RoundLabel" type="Label" parent="HUDRoot/RoundProgress" unique_id=970590077]
+layout_mode = 2
+text = "Round: 1"
+
+[node name="StatBadge" type="Panel" parent="HUDRoot" unique_id=829867145]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -202.0
+offset_right = 118.0
+offset_bottom = 320.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_2cr7j")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDRoot/StatBadge" unique_id=621619422]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+offset_transform_enabled = true
+offset_transform_position = Vector2(100, 50)
+theme_override_constants/separation = 50
+
+[node name="ClassLabel" type="Label" parent="HUDRoot/StatBadge/VBoxContainer" unique_id=503793899]
+layout_mode = 2
+text = "Class:"
+
+[node name="KillsLabel" type="Label" parent="HUDRoot/StatBadge/VBoxContainer" unique_id=2138366816]
+layout_mode = 2
+text = "Kills:"
+
+[node name="Health" type="HBoxContainer" parent="HUDRoot" unique_id=623334362]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -394.0
+offset_top = -102.0
+offset_right = 221.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 75
+
+[node name="Ability" type="VBoxContainer" parent="HUDRoot/Health" unique_id=129099868]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="AbiltyLabel" type="Label" parent="HUDRoot/Health/Ability" unique_id=1528005914]
+layout_mode = 2
+text = "Ability Charge"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="HUDRoot/Health/Ability" unique_id=850429391]
+custom_minimum_size = Vector2(200, 55)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_su2ui")
+theme_override_styles/fill = SubResource("StyleBoxFlat_xt3y6")
+rounded = true
+
+[node name="HealthBar" type="VBoxContainer" parent="HUDRoot/Health" unique_id=863522181]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="AbiltyLabel" type="Label" parent="HUDRoot/Health/HealthBar" unique_id=1724193024]
+layout_mode = 2
+text = "Health Bar"
+horizontal_alignment = 1
+
+[node name="HealthBar" type="ProgressBar" parent="HUDRoot/Health/HealthBar" unique_id=1439339703]
+custom_minimum_size = Vector2(340, 55)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_n2snw")
+theme_override_styles/fill = SubResource("StyleBoxFlat_37p78")
+value = 100.0
+rounded = true
+show_percentage = false
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUDRoot/Health/HealthBar/HealthBar" unique_id=1760161716]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = -2
+
+[node name="20Label" type="Label" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=935575048]
+layout_mode = 2
+size_flags_horizontal = 3
+offset_transform_enabled = true
+offset_transform_position = Vector2(25, 0)
+text = "20"
+
+[node name="VSeparator20" type="VSeparator" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=1247362604]
+layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_fa6ko")
+
+[node name="40Label" type="Label" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=466666357]
+layout_mode = 2
+size_flags_horizontal = 3
+offset_transform_enabled = true
+offset_transform_position = Vector2(25, 0)
+text = "40"
+
+[node name="VSeparator40" type="VSeparator" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=835296237]
+layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_fa6ko")
+
+[node name="60Label" type="Label" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=983323114]
+layout_mode = 2
+size_flags_horizontal = 3
+offset_transform_enabled = true
+offset_transform_position = Vector2(25, 0)
+text = "60"
+
+[node name="VSeparator60" type="VSeparator" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=1711893375]
+layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_fa6ko")
+
+[node name="80Label" type="Label" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=1272728124]
+layout_mode = 2
+size_flags_horizontal = 3
+offset_transform_enabled = true
+offset_transform_position = Vector2(25, 0)
+text = "80"
+
+[node name="VSeparator80" type="VSeparator" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=1281223412]
+layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_fa6ko")
+
+[node name="100Label" type="Label" parent="HUDRoot/Health/HealthBar/HealthBar/HBoxContainer" unique_id=766206904]
+layout_mode = 2
+size_flags_horizontal = 3
+offset_transform_enabled = true
+offset_transform_position = Vector2(20, 0)
+text = "100"
+
+[node name="Abilites" type="VBoxContainer" parent="HUDRoot" unique_id=1108621442]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="AbilitiesLabel" type="Label" parent="HUDRoot/Abilites" unique_id=1821616563]
+layout_mode = 2
+text = "Abilities
+"
+horizontal_alignment = 1
+
+[node name="Control" type="Control" parent="HUDRoot/Abilites" unique_id=1098525436]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+
+[node name="BigCircle1" type="Panel" parent="HUDRoot/Abilites/Control" unique_id=1570139477]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+offset_right = 80.0
+offset_bottom = 80.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_k8rmw")
+
+[node name="BigCircle2" type="Panel" parent="HUDRoot/Abilites/Control" unique_id=1564934366]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -100.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_k8rmw")
+
+[node name="LittleCircle1" type="Panel" parent="HUDRoot/Abilites/Control" unique_id=1950274903]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 15.0
+offset_top = 10.0
+offset_right = 71.0
+offset_bottom = 66.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_k8rmw")
+
+[node name="LittleCircle2" type="Panel" parent="HUDRoot/Abilites/Control" unique_id=2025086885]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 110.0
+offset_top = -85.0
+offset_right = 166.0
+offset_bottom = -29.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_k8rmw")

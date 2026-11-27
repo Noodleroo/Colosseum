@@ -1,0 +1,667 @@
+[gd_scene format=3 uid="uid://bc2rkaimso7d8"]
+
+[ext_resource type="Script" uid="uid://dghl8l8wvn11k" path="res://colosseum/player/Player.gd" id="1_ajjv7"]
+[ext_resource type="Script" uid="uid://dd4y1a7sgarye" path="res://colosseum/player/CameraRig.gd" id="2_nrp6a"]
+
+[sub_resource type="GDScript" id="GDScript_yw30f"]
+script/source = "# res://scenes/ui/pinned_hotbar_ui.gd
+class_name PinnedHotbarUI
+extends Control
+
+@export var slot_ui_scene: PackedScene
+
+@onready var hotbar_grid: Container = $VBoxContainer/HotbarGrid
+@onready var selected_item_label: Label = $VBoxContainer/SelectedItemLabel
+
+var bound_inventory: InventoryData
+var active_pin_index: int = 0
+
+
+func bind_inventory(inventory_data: InventoryData) -> void:
+	if bound_inventory and bound_inventory.inventory_updated.is_connected(refresh_hotbar_wrapper):
+		bound_inventory.inventory_updated.disconnect(refresh_hotbar_wrapper)
+
+	bound_inventory = inventory_data
+	
+	if bound_inventory:
+		bound_inventory.inventory_updated.connect(refresh_hotbar_wrapper)
+
+	# If the node isn't inside the tree yet (ready hasn't fired), wait for ready
+	if not is_inside_tree():
+		await ready
+
+	_rebuild_hotbar_structure()
+
+func refresh_hotbar_wrapper(_inventory_data: InventoryData = null) -> void:
+	_update_hotbar_contents()
+
+
+func set_active_slot(pin_index: int) -> void:
+	active_pin_index = pin_index
+	_update_hotbar_contents()
+
+
+# 1. Instantiates child nodes ONLY ONCE when binding or when pin count changes
+func _rebuild_hotbar_structure() -> void:
+	if hotbar_grid == null or slot_ui_scene == null or bound_inventory == null:
+		return
+
+	# Clear out all previous nodes immediately
+	for child in hotbar_grid.get_children():
+		child.free()
+
+	# Create exactly one slot node per pinned index
+	for pin_i in range(bound_inventory.pinned_indices.size()):
+		var slot_node = slot_ui_scene.instantiate() as InventorySlotUI
+		hotbar_grid.add_child(slot_node)
+
+	_update_hotbar_contents()
+
+
+# 2. Updates icons, text, and selection borders on existing nodes (NEVER creates new nodes)
+func _update_hotbar_contents() -> void:
+	if bound_inventory == null or hotbar_grid == null:
+		return
+
+	var children = hotbar_grid.get_children()
+	var total_pins = bound_inventory.pinned_indices.size()
+
+	# If the number of pinned slots changed (e.g. pinned/unpinned an item), rebuild structure
+	if children.size() != total_pins:
+		_rebuild_hotbar_structure()
+		return
+
+	for pin_i in range(total_pins):
+		var slot_node = children[pin_i] as InventorySlotUI
+		if slot_node:
+			var actual_slot_index = bound_inventory.pinned_indices[pin_i]
+			var is_selected = (pin_i == active_pin_index)
+			var slot_data = null
+
+			if actual_slot_index >= 0 and actual_slot_index < bound_inventory.slot_datas.size():
+				slot_data = bound_inventory.slot_datas[actual_slot_index]
+
+			slot_node.update_slot(slot_data, actual_slot_index, true, is_selected)
+
+	_update_selected_label()
+
+
+func _update_selected_label() -> void:
+	if selected_item_label == null or bound_inventory == null:
+		return
+
+	if active_pin_index >= 0 and active_pin_index < bound_inventory.pinned_indices.size():
+		var actual_slot_index = bound_inventory.pinned_indices[active_pin_index]
+		if actual_slot_index >= 0 and actual_slot_index < bound_inventory.slot_datas.size():
+			var slot_data = bound_inventory.slot_datas[actual_slot_index]
+			if slot_data and slot_data.item:
+				selected_item_label.text = slot_data.item.get_localized_name()
+				return
+
+	selected_item_label.text = \"\"
+"
+
+[sub_resource type="GDScript" id="GDScript_qjkh3"]
+script/source = "# res://scenes/ui/inventory_slot_ui.gd
+class_name InventorySlotUI
+extends PanelContainer
+
+signal slot_dropped(origin_index: int, target_index: int)
+signal slot_pin_requested(index: int)
+
+@onready var icon: TextureRect = $Icon
+@onready var quantity_label: Label = $QuantityLabel
+@onready var pin_indicator: Control = get_node_or_null(\"PinIndicator\")
+@onready var selection_border: Control = get_node_or_null(\"SelectionBorder\")
+@onready var drop_preview_border: Control = get_node_or_null(\"DropPreviewBorder\")
+
+var slot_index: int = -1
+var slot_data: SlotData
+
+
+func _ready() -> void:
+	# Hide drop border at start
+	if drop_preview_border:
+		drop_preview_border.visible = false
+
+	# Connect mouse exit to clear highlight
+	mouse_exited.connect(_on_mouse_exited)
+
+
+func update_slot(data: SlotData, index: int, is_pinned: bool = false, is_selected: bool = false) -> void:
+	slot_index = index
+	slot_data = data
+
+	if pin_indicator:
+		pin_indicator.visible = is_pinned
+
+	if selection_border:
+		selection_border.visible = is_selected
+
+	if slot_data and slot_data.item:
+		icon.texture = slot_data.item.icon
+		icon.visible = true
+
+		# Build multi-line tooltip string with Name and Description
+		var item_name = slot_data.item.get_localized_name()
+		var item_desc = slot_data.item.get_localized_description()
+
+		if item_desc.is_empty():
+			tooltip_text = item_name
+		else:
+			tooltip_text = \"%s\\n%s\" % [item_name, item_desc]
+
+		if slot_data.quantity > 1:
+			quantity_label.text = str(slot_data.quantity)
+			quantity_label.visible = true
+		else:
+			quantity_label.visible = false
+	else:
+		icon.texture = null
+		icon.visible = false
+		quantity_label.visible = false
+		tooltip_text = \"\"
+
+
+func _on_mouse_exited() -> void:
+	if drop_preview_border:
+		drop_preview_border.visible = false
+
+
+# 1. Initiates the drag when left-clicking and dragging a filled slot
+func _get_drag_data(_at_position: Vector2) -> Variant:
+	if slot_data == null or slot_data.item == null:
+		return null
+
+	# Create a dedicated TextureRect for the drag preview
+	var drag_preview = TextureRect.new()
+	drag_preview.texture = slot_data.item.icon
+
+	# Prevent texture warping & maintain aspect ratio
+	drag_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	drag_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	drag_preview.custom_minimum_size = Vector2(40, 40)
+	drag_preview.modulate = Color(1, 1, 1, 0.8)
+
+	# Wrap in a Control container so it centers on the mouse cursor
+	var preview_control = Control.new()
+	preview_control.add_child(drag_preview)
+	drag_preview.position = -drag_preview.custom_minimum_size / 2.0
+
+	set_drag_preview(preview_control)
+
+	return {
+		\"origin_index\": slot_index,
+		\"slot_data\": slot_data
+	}
+
+
+# 2. Checks if a dragged item can be dropped here and highlights the target slot
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	var is_valid = typeof(data) == TYPE_DICTIONARY and data.has(\"origin_index\")
+
+	# Only highlight this specific slot if the drag payload is valid
+	if drop_preview_border:
+		drop_preview_border.visible = is_valid
+
+	return is_valid
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			slot_pin_requested.emit(slot_index)
+			accept_event() # Prevents parent containers from swallowing the right-click
+
+# 3. Executes the item swap when releasing the mouse button
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
+	if drop_preview_border:
+		drop_preview_border.visible = false
+
+	if typeof(data) == TYPE_DICTIONARY and data.has(\"origin_index\"):
+		slot_dropped.emit(data[\"origin_index\"], slot_index)
+
+
+# 4. Hide drop indicator preview if mouse leaves the slot boundary
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DRAG_END:
+		if drop_preview_border:
+			drop_preview_border.visible = false
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fa6ko"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_size = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lc2el"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6811861, 0.6970466, 0.83847636, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_size = 1
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_g6k8r"]
+load_path = "res://.godot/imported/pin.png-e42a1107de09d8c8546adb2916867d7a.ctex"
+
+[sub_resource type="PackedScene" id="PackedScene_boad6"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"id_paths": [PackedInt32Array(), PackedInt32Array(), PackedInt32Array(), PackedInt32Array(), PackedInt32Array()],
+"names": PackedStringArray("InventorySlotUI", "PanelContainer", "custom_minimum_size", "anchors_preset", "anchor_left", "anchor_top", "anchor_right", "anchor_bottom", "offset_left", "offset_top", "offset_right", "offset_bottom", "grow_horizontal", "grow_vertical", "size_flags_horizontal", "size_flags_vertical", "script", "SelectionBorder", "Panel", "layout_mode", "mouse_filter", "theme_override_styles/panel", "DropPreviewBorder", "Panel", "visible", "layout_mode", "mouse_filter", "theme_override_styles/panel", "Icon", "TextureRect", "layout_mode", "mouse_filter", "expand_mode", "stretch_mode", "QuantityLabel", "Label", "custom_minimum_size", "custom_maximum_size", "layout_mode", "size_flags_horizontal", "offset_transform_enabled", "offset_transform_position", "theme_override_colors/font_shadow_color", "theme_override_constants/shadow_offset_x", "theme_override_constants/shadow_offset_y", "theme_override_constants/shadow_outline_size", "horizontal_alignment", "vertical_alignment", "PinIndicator", "TextureRect", "custom_minimum_size", "layout_mode", "size_flags_horizontal", "size_flags_vertical", "texture", "expand_mode", "stretch_mode"),
+"node_count": 6,
+"node_ids": PackedInt32Array(1371072587, 376824707, 242326166, 1811805111, 2084315228, 183845316),
+"node_paths": [NodePath("."), NodePath("."), NodePath("."), NodePath("."), NodePath(".")],
+"nodes": PackedInt32Array(-1, -1, 1, 0, -1, 15, 2, 0, 3, 1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 9, 7, 10, 8, 11, 9, 12, 10, 13, 11, 14, 12, 15, 13, 16, 14, 0, 1073741824, 0, 18, 17, -1, 3, 19, 15, 20, 16, 21, 17, 0, 1073741825, 0, 23, 22, -1, 4, 24, 18, 25, 19, 26, 20, 27, 21, 0, 1073741826, 0, 29, 28, -1, 4, 30, 22, 31, 23, 32, 24, 33, 25, 0, 1073741827, 0, 35, 34, -1, 12, 36, 26, 37, 27, 38, 28, 39, 29, 40, 30, 41, 31, 42, 32, 43, 33, 44, 34, 45, 35, 46, 36, 47, 37, 0, 1073741828, 0, 49, 48, -1, 7, 50, 38, 51, 39, 52, 40, 53, 41, 54, 42, 55, 43, 56, 44, 0),
+"variants": [Vector2(64, 64), 8, 0.5, 0.5, 0.5, 0.5, -32.0, -32.0, 32.0, 32.0, 2, 2, 3, 3, SubResource("GDScript_qjkh3"), 2, 2, SubResource("StyleBoxFlat_fa6ko"), false, 2, 2, SubResource("StyleBoxFlat_lc2el"), 2, 2, 1, 5, Vector2(25, 25), Vector2(25, 25), 2, 4, true, Vector2(22, 22), Color(0, 0, 0, 1), 1, 1, 2, 1, 1, Vector2(10, 0), 2, 8, 0, SubResource("CompressedTexture2D_g6k8r"), 5, 4],
+"version": 3
+}
+
+[sub_resource type="PackedScene" id="PackedScene_rgyib"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"id_paths": [],
+"names": PackedStringArray("PinnedHotbarUI", "layout_mode", "anchors_preset", "anchor_right", "anchor_bottom", "grow_horizontal", "grow_vertical", "mouse_filter", "script", "slot_ui_scene", "Control", "VBoxContainer", "offset_right", "offset_bottom", "HotbarGrid", "custom_minimum_size", "HBoxContainer", "SelectedItemLabel", "unique_name_in_owner", "texture_filter", "horizontal_alignment", "Label"),
+"node_count": 4,
+"node_ids": PackedInt32Array(671959399, 2006909184, 463886155, 1181145025),
+"node_paths": [],
+"nodes": PackedInt32Array(-1, -1, 10, 0, -1, 9, 1, 0, 2, 1, 3, 2, 4, 2, 5, 3, 6, 3, 7, 3, 8, 4, 9, 5, 0, 0, 0, 11, 11, -1, 3, 1, 6, 12, 7, 13, 7, 0, 1, 0, 16, 14, -1, 2, 15, 8, 1, 3, 0, 1, 0, 21, 17, -1, 4, 18, 9, 19, 10, 1, 3, 20, 10, 0),
+"variants": [3, 15, 1.0, 2, SubResource("GDScript_yw30f"), SubResource("PackedScene_boad6"), 0, 40.0, Vector2(0, 70), true, 1],
+"version": 3
+}
+
+[sub_resource type="GDScript" id="GDScript_hg6s5"]
+script/source = "# res://scenes/ui/inventory_ui.gd
+class_name InventoryUI
+extends Control
+
+@export var slot_ui_scene: PackedScene
+
+@onready var item_grid: GridContainer = $PanelContainer/VBoxContainer/ItemGrid
+
+var bound_inventory: InventoryData
+var active_pin_index: int = 0
+
+
+func bind_inventory(inventory_data: InventoryData) -> void:
+	if bound_inventory:
+		bound_inventory.inventory_updated.disconnect(refresh_ui_wrapper)
+
+	bound_inventory = inventory_data
+	bound_inventory.inventory_updated.connect(refresh_ui_wrapper)
+	refresh_ui()
+
+
+func refresh_ui_wrapper(_inventory_data: InventoryData = null) -> void:
+	refresh_ui()
+
+
+func set_active_slot(pin_index: int) -> void:
+	active_pin_index = pin_index
+	refresh_ui()
+
+
+func refresh_ui() -> void:
+	if bound_inventory == null or item_grid == null:
+		return
+
+	# Clear existing slot UI nodes
+	for child in item_grid.get_children():
+		child.queue_free()
+
+	# Wait for Godot to clear the old nodes out of the Scene Tree
+	if item_grid.get_child_count() > 0:
+		await get_tree().process_frame
+
+	if slot_ui_scene == null:
+		return
+
+	# Sort pinned indices to guarantee visual left-to-right alignment
+	bound_inventory.pinned_indices.sort()
+
+	# Determine active grid slot index
+	var active_slot_index: int = -1
+	if active_pin_index >= 0 and active_pin_index < bound_inventory.pinned_indices.size():
+		active_slot_index = bound_inventory.pinned_indices[active_pin_index]
+
+	# Populate inventory grid sequentially
+	for i in range(bound_inventory.slot_datas.size()):
+		var slot_node = slot_ui_scene.instantiate() as InventorySlotUI
+		item_grid.add_child(slot_node)
+
+		var is_pinned = bound_inventory.is_slot_pinned(i)
+		var is_selected = (i == active_slot_index)
+
+		slot_node.update_slot(bound_inventory.slot_datas[i], i, is_pinned, is_selected)
+
+		# Connect pin & drop signals
+		slot_node.slot_pin_requested.connect(_on_slot_pin_requested)
+		slot_node.slot_dropped.connect(_on_slot_dropped)
+
+
+func _on_slot_pin_requested(slot_index: int) -> void:
+	if bound_inventory:
+		bound_inventory.toggle_pin_slot(slot_index)
+
+
+func _on_slot_dropped(origin_index: int, target_index: int) -> void:
+	if bound_inventory:
+		bound_inventory.swap_slots(origin_index, target_index)
+"
+
+[sub_resource type="PackedScene" id="PackedScene_8t03j"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"id_paths": [],
+"names": PackedStringArray("InventoryUI", "layout_mode", "anchors_preset", "anchor_right", "anchor_bottom", "grow_horizontal", "grow_vertical", "mouse_filter", "script", "slot_ui_scene", "Control", "PanelContainer", "custom_minimum_size", "anchor_left", "anchor_top", "offset_left", "offset_top", "offset_right", "offset_bottom", "VBoxContainer", "ItemGrid", "columns", "GridContainer"),
+"node_count": 4,
+"node_ids": PackedInt32Array(395115828, 1171042708, 945431168, 1181509415),
+"node_paths": [],
+"nodes": PackedInt32Array(-1, -1, 10, 0, -1, 9, 1, 0, 2, 1, 3, 2, 4, 2, 5, 3, 6, 3, 7, 4, 8, 5, 9, 6, 0, 0, 0, 11, 11, -1, 13, 12, 7, 1, 4, 2, 8, 13, 9, 14, 9, 3, 9, 4, 9, 15, 10, 16, 10, 17, 11, 18, 11, 5, 3, 6, 3, 0, 1, 0, 19, 19, -1, 1, 1, 3, 0, 2, 0, 22, 20, -1, 2, 1, 3, 21, 12, 0),
+"variants": [3, 15, 1.0, 2, 1, SubResource("GDScript_hg6s5"), SubResource("PackedScene_boad6"), Vector2(400, 300), 8, 0.5, -20.0, 20.0, 5],
+"version": 3
+}
+
+[sub_resource type="GDScript" id="GDScript_rkbax"]
+script/source = "class_name InventoryData
+extends Resource
+
+signal inventory_updated(inventory_data: InventoryData)
+
+@export var slot_datas: Array[SlotData] = []
+@export var pinned_indices: Array[int] = [0, 1, 2, 3, 4]
+@export var max_pins: int = 5
+
+const FISTS_ITEM: Item = preload(\"res://resources/wayfinders/items/fists.tres\")
+
+##[b]Toggles pin slots[/b], probably not very useful for editing.
+func toggle_pin_slot(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= slot_datas.size():
+		return
+
+	if pinned_indices.has(slot_index):
+		pinned_indices.erase(slot_index)
+		inventory_updated.emit(self)
+	else:
+		if pinned_indices.size() < max_pins:
+			pinned_indices.append(slot_index)
+			inventory_updated.emit(self)
+		else:
+			print(\"Cannot pin more than \", max_pins, \" slots!\")
+
+##Just used to [b]drag-and-drop[/b] items, may be useful.
+func swap_slots(index_a: int, index_b: int) -> void:
+	if index_a >= 0 and index_a < slot_datas.size() and index_b >= 0 and index_b < slot_datas.size():
+		var temp = slot_datas[index_a]
+		slot_datas[index_a] = slot_datas[index_b]
+		slot_datas[index_b] = temp
+
+		pinned_indices.sort()
+
+		inventory_updated.emit(self)
+		
+##Get the [b]item[/b] in the selected slot of the inventory.
+func get_item_in_slot(slot_index: int) -> Item:
+	if slot_index >= 0 and slot_index < slot_datas.size():
+		var slot = slot_datas[slot_index]
+		if slot and slot.item:
+			return slot.item
+			
+	# Fallback to your custom FistsItem resource if slot is empty!
+	return FISTS_ITEM
+
+##Gets the [b]name[/b] of an item in a specified spot.
+func get_item_name(slot_index: int):
+	if slot_index >= 0 and slot_index < slot_datas.size():
+		var current_item: Item = get_item_in_slot(slot_index)
+		if current_item != null:
+			return current_item.get_localized_name()
+		return \"Fists\"
+	return \"Not Valid slot Index\"
+
+##Gets the [b]description[/b] of an item in a specified spot.
+func get_item_desc(slot_index: int):
+	if slot_index >= 0 and slot_index < slot_datas.size():
+		var current_item: Item = get_item_in_slot(slot_index)
+		if current_item != null:
+			var _item_name: String = current_item.get_localized_description()
+	return \"Not Valid slot Index\"
+
+##Get the [b]items[/b] in the inventory.
+func get_items_in_inventory() -> Array[Item]:
+	var items: Array[Item] = []
+
+	for slot in slot_datas:
+		if slot != null and slot.item != null:
+			items.append(slot.item)
+
+	return items
+
+func _init(size: int = 20) -> void:
+	if slot_datas.is_empty() and size > 0:
+		slot_datas.resize(size)
+		# Initialize slots with empty SlotData instances
+		for i in range(size):
+			slot_datas[i] = SlotData.new()
+
+##Checks if a [b]specified slot[/b] is [b]pinned[/b].
+func is_slot_pinned(slot_index: int) -> bool:
+	return pinned_indices.has(slot_index)
+
+##Gets the [b]total weight[/b] in the inventory.
+func get_total_weight() -> float:
+	var total_weight: float = 0.0
+	for slot in slot_datas:
+		if slot and slot.item:
+			total_weight += slot.item.weight * slot.quantity
+	return total_weight
+
+##Adds an item directly into the players inventory.
+func add_item(item: Item, quantity: int = 1) -> int:
+	if item == null or quantity <= 0:
+		return quantity
+
+	var remaining_quantity = quantity
+
+	# 1. Try to stack onto existing matching items
+	for slot_data in slot_datas:
+		if slot_data and slot_data.item and slot_data.item.id == item.id:
+			var max_stack = item.max_stack_size
+			var space_left = max_stack - slot_data.quantity
+			if space_left > 0:
+				var amount_to_add = min(remaining_quantity, space_left)
+				slot_data.quantity += amount_to_add
+				remaining_quantity -= amount_to_add
+
+				if remaining_quantity <= 0:
+					inventory_updated.emit(self)
+					return 0
+
+	# 2. Place remaining quantity into empty slots
+	for i in range(slot_datas.size()):
+		var slot_data = slot_datas[i]
+
+		if slot_data == null or slot_data.item == null:
+			if slot_data == null:
+				slot_data = SlotData.new()
+				slot_datas[i] = slot_data
+
+			var max_stack = item.max_stack_size if item.max_stack_size > 0 else 64
+			var amount_to_add = min(remaining_quantity, max_stack)
+
+			slot_data.item = item
+			slot_data.quantity = amount_to_add
+			remaining_quantity -= amount_to_add
+
+			if remaining_quantity <= 0:
+				inventory_updated.emit(self)
+				return 0
+
+	if remaining_quantity < quantity:
+		inventory_updated.emit(self)
+
+	return remaining_quantity
+"
+
+[sub_resource type="GDScript" id="GDScript_g1dw6"]
+script/source = "class_name SlotData
+extends Resource
+
+@export var item: Item
+@export var quantity: int = 1: set = set_quantity
+
+# Tracks instance-specific state (e.g., remaining durability)
+@export var current_durability: int = -1
+
+
+func set_quantity(value: int) -> void:
+	quantity = value
+	if quantity < 1:
+		quantity = 0
+		item = null
+
+
+func can_fully_merge_with(other_slot: SlotData) -> bool:
+	return (
+		item != null
+		and other_slot.item != null
+		and item.id == other_slot.item.id
+		and item.max_stack_size > 1
+		and quantity + other_slot.quantity <= item.max_stack_size
+	)
+
+
+func create_single_item_slot() -> SlotData:
+	var new_slot = SlotData.new()
+	new_slot.item = item
+	new_slot.quantity = 1
+	new_slot.current_durability = current_durability
+	return new_slot
+"
+
+[sub_resource type="Resource" id="Resource_voh5k"]
+script = SubResource("GDScript_rkbax")
+metadata/_custom_type_script = "uid://byhnboj7sbpo3"
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fa6ko"]
+margin = 0.3
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fa6ko"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fa6ko"]
+
+[sub_resource type="FontFile" id="FontFile_i3pqv"]
+subpixel_positioning = 0
+msdf_pixel_range = 14
+msdf_size = 128
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/64/0/ascent = 0.0
+cache/0/64/0/descent = 0.0
+cache/0/64/0/underline_position = 0.0
+cache/0/64/0/underline_thickness = 0.0
+cache/0/64/0/scale = 1.0
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_i3pqv"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_sqyqi"]
+radius = 2.0
+
+[node name="Player" type="CharacterBody3D" unique_id=1574273862]
+process_mode = 3
+script = ExtResource("1_ajjv7")
+hotbar_ui_scene = SubResource("PackedScene_rgyib")
+inventory_ui_scene = SubResource("PackedScene_8t03j")
+inventory_data = SubResource("Resource_voh5k")
+fist_damage = null
+fist_reach = null
+
+[node name="CameraRig" type="Node3D" parent="." unique_id=1517678052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3142115, 0)
+script = ExtResource("2_nrp6a")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraRig" unique_id=215842616]
+transform = Transform3D(1, 0, 0, 0, 0.98132485, 0.19235827, 0, -0.19235827, 0.98132485, 0, 0.2602265, 0)
+collision_mask = 3
+shape = SubResource("SphereShape3D_fa6ko")
+spring_length = 5.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig/SpringArm3D" unique_id=779413404]
+
+[node name="InteractionRay" type="RayCast3D" parent="CameraRig/SpringArm3D/Camera3D" unique_id=1886277752]
+transform = Transform3D(1, 0, 0, 0, 1.0000002, 0, 0, 0, 1.0000002, 0, 0.18897498, -2.4640653)
+target_position = Vector3(0, 0, -3)
+collision_mask = 5
+debug_shape_custom_color = Color(0.7107798, 0.54975766, 0.7894732, 1)
+debug_shape_thickness = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=890300543]
+unique_name_in_owner = true
+shape = SubResource("CapsuleShape3D_fa6ko")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1911125411]
+unique_name_in_owner = true
+mesh = SubResource("CapsuleMesh_fa6ko")
+
+[node name="CoyoteCheck" type="RayCast3D" parent="." unique_id=2088885281]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.8943864, 0)
+target_position = Vector3(0, -0.5, 0)
+
+[node name="CeilingCheck" type="RayCast3D" parent="." unique_id=1769056267]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9859383, 0)
+target_position = Vector3(0, 0.5, 0)
+
+[node name="Label3D" type="Label3D" parent="." unique_id=964064427]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6417475, 0)
+billboard = 2
+no_depth_test = true
+font = SubResource("FontFile_i3pqv")
+font_size = 64
+outline_size = 14
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=1704017727]
+replication_config = SubResource("SceneReplicationConfig_i3pqv")
+
+[node name="ItemHoldPoint" type="Node3D" parent="." unique_id=2046964750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37640762, 0, -0.39822268)
+
+[node name="ActiveItemMesh" type="MeshInstance3D" parent="ItemHoldPoint" unique_id=206505072]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=784934119]
+
+[node name="InteractionZone" type="Area3D" parent="." unique_id=1835289851]
+collision_layer = 5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionZone" unique_id=1644759436]
+shape = SubResource("SphereShape3D_sqyqi")
+debug_color = Color(0.96168846, 1.540184e-06, 0.51167804, 0.41960785)

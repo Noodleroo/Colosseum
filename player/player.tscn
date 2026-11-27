@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://bc2rkaimso7d8"]
+
+[ext_resource type="Script" uid="uid://dghl8l8wvn11k" path="res://player/Player.gd" id="1_ajjv7"]
+[ext_resource type="Script" uid="uid://dd4y1a7sgarye" path="res://player/CameraRig.gd" id="2_nrp6a"]
+[ext_resource type="PackedScene" uid="uid://d04ivry55ux8s" path="res://hud.tscn" id="2_yw30f"]
+[ext_resource type="Script" uid="uid://bgbvlpio0jo7o" path="res://player/PlayerInteractionZone.gd" id="3_l1s48"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fa6ko"]
+margin = 0.3
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fa6ko"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fa6ko"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_sqyqi"]
+radius = 2.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fa6ko"]
+size = Vector3(1.4, 1.2, 1.4)
+
+[node name="Player" type="CharacterBody3D" unique_id=1574273862 groups=["player"]]
+process_mode = 3
+script = ExtResource("1_ajjv7")
+arena_hud = ExtResource("2_yw30f")
+
+[node name="CameraRig" type="Node3D" parent="." unique_id=1517678052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3142115, 0)
+script = ExtResource("2_nrp6a")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraRig" unique_id=215842616]
+transform = Transform3D(1, 0, 0, 0, 0.98132485, 0.19235827, 0, -0.19235827, 0.98132485, 0, 0.2602265, 0)
+collision_mask = 3
+shape = SubResource("SphereShape3D_fa6ko")
+spring_length = 5.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig/SpringArm3D" unique_id=779413404]
+
+[node name="InteractionRay" type="RayCast3D" parent="CameraRig/SpringArm3D/Camera3D" unique_id=1886277752]
+transform = Transform3D(1, 0, 0, 0, 1.0000002, 0, 0, 0, 1.0000002, 0, 0.18897498, -2.4640653)
+target_position = Vector3(0, 0, -3)
+collision_mask = 5
+debug_shape_custom_color = Color(0.7107798, 0.54975766, 0.7894732, 1)
+debug_shape_thickness = 4
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=890300543]
+unique_name_in_owner = true
+shape = SubResource("CapsuleShape3D_fa6ko")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1911125411]
+unique_name_in_owner = true
+mesh = SubResource("CapsuleMesh_fa6ko")
+
+[node name="CoyoteCheck" type="RayCast3D" parent="." unique_id=2088885281]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.8943864, 0)
+target_position = Vector3(0, -0.5, 0)
+
+[node name="CeilingCheck" type="RayCast3D" parent="." unique_id=1769056267]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9859383, 0)
+target_position = Vector3(0, 0.5, 0)
+
+[node name="ItemHoldPoint" type="Node3D" parent="." unique_id=2046964750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37640762, 0, -0.39822268)
+
+[node name="ActiveItemMesh" type="MeshInstance3D" parent="ItemHoldPoint" unique_id=206505072]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=784934119]
+
+[node name="InteractionZone" type="Area3D" parent="." unique_id=1835289851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.021756053, 0, 0)
+collision_mask = 12
+script = ExtResource("3_l1s48")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionZone" unique_id=1644759436]
+shape = SubResource("SphereShape3D_sqyqi")
+debug_color = Color(0.96168846, 1.540184e-06, 0.51167804, 0.41960785)
+
+[node name="MeleeHitbox" type="Area3D" parent="." unique_id=1753856097]
+collision_layer = 0
+collision_mask = 8
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeleeHitbox" unique_id=920005946]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+shape = SubResource("BoxShape3D_fa6ko")

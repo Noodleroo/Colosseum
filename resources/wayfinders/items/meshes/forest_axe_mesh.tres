@@ -1,9 +1,0 @@
-[gd_resource type="CapsuleMesh" format=3 uid="uid://bweh0cb0foqbv"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4qul1"]
-albedo_color = Color(0.26583967, 0.09805506, 3.6098065e-08, 1)
-
-[resource]
-material = SubResource("StandardMaterial3D_4qul1")
-radius = 0.05
-height = 1.5

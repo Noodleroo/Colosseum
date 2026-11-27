@@ -1,0 +1,10 @@
+78098b89c88a74ebe8c20117b8754620
+::res://::1795746410
+colosseum.tscn::PackedScene::8088311613849427582::1795746298::0::1::::<><><>0<>0<><>::uid://bc2rkaimso7d8::::res://colosseum/player/player.tscn<>uid://bmltbs6xq44l5::::res://colosseum/Switch.gd
+Switch.gd::GDScript::3252551365677424272::1795745306::0::1::::<>Interactable<><>0<>0<><>::
+::res://player/::1795746244
+CameraRig.gd::GDScript::7431199225588673688::1795740505::0::1::::CameraControls<>Node3D<><>0<>0<><>::
+Interactable.gd::GDScript::3118420844855296750::1795740505::0::1::::Interactable<>Area3D<><>0<>0<><>::
+Player.gd::GDScript::7595573205068790174::1795744495::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.tscn::PackedScene::2583586630073160471::1795746113::0::1::::<><><>0<>0<><>::uid://dghl8l8wvn11k::::res://colosseum/player/Player.gd<>uid://dd4y1a7sgarye::::res://colosseum/player/CameraRig.gd<>uid://bgbvlpio0jo7o::::res://colosseum/player/PlayerInteractionZone.gd
+PlayerInteractionZone.gd::GDScript::2810913624734967582::1795746244::0::1::::PlayerInteractionZone<>Area3D<><>0<>0<><>::
